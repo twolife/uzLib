@@ -105,7 +105,7 @@ namespace
   }
 
   // Returns the status of the stream as a string.
-  std::string GetStreamStatusStr(const std::ios_base& Stream)
+  std::string GetStreamStatusStr(const uzLib::in_stream& Stream)
   {
     if (Stream.good())
       return "good";
@@ -876,7 +876,7 @@ bool uzLib::uz1BurrowsWheelerAlgorithm::Compress(uzLib::in_stream& InStream, uzL
 
 #elif (BWT_SORT_TYPE == BWT_7Z_SORT)
     {
-    #error BWT_SORT_TYPE == BWT_7Z_SORT doesn't work correctly!
+    #error BWT_SORT_TYPE == BWT_7Z_SORT
     /*UInt32 Ret =*/ BlockSort(pBlockSorterIndex, &(CompressBuffer[0]), CompressLength);
     
     CompressPosition.clear();
@@ -1160,6 +1160,7 @@ bool uzLib::uz1RLEAlgorithm::Decompress(uzLib::in_stream& InStream, uzLib::out_s
 
 void uzLib::uz1RLEAlgorithm::EncodeEmitRun(out_stream& OutStream, BYTE Char, BYTE Count)
 {
+/*
   // Write max. 5 characters to the stream.
   for (int Down = std::min(Count, RLE_LEAD); Down > 0; --Down)
     WriteByte(OutStream, Char);
@@ -1167,6 +1168,7 @@ void uzLib::uz1RLEAlgorithm::EncodeEmitRun(out_stream& OutStream, BYTE Char, BYT
   // In case 5 or more characters where written, append the length.
   if (Count >= RLE_LEAD)
     WriteByte(OutStream, Count);
+*/
 }
 
 

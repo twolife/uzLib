@@ -12,6 +12,7 @@ Created by Gugi, 2010-2011
 #include <vector>
 #include <exception>
 #include <string>
+#include <zlib.h>
 
 
 //===========================================================================
@@ -168,7 +169,7 @@ namespace uzLib
   #define BWT_7Z_SORT 4  // Uses 7-zip source; this is broken (the sorting always returned slightly different results than the above 3 ways;
                          //       doesn't matter, as BWT_EXT_SORT is faster anyway; I only used this for testing purposes).
 
-  #define BWT_SORT_TYPE BWT_EXT_SORT
+  #define BWT_SORT_TYPE BWT_STD_SORT
 
 
   class uz1BurrowsWheelerAlgorithm : public uz1AlgorithmBase
