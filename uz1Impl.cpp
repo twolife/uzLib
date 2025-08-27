@@ -6,8 +6,6 @@ Language: C++
 Created by Gugi, 2010-2011
 */
 
-#include "stdafx.h"
-
 #include "uz1Impl.h"
 
 #include <vector>
@@ -198,14 +196,14 @@ namespace
   }
   
   // Copies max. the specified number of bytes into the destination vector (at the end) and returns the number of copied bytes.
-  int CopyDataToVector(uzLib::in_stream& InStream, vector<BYTE>& Destination, const size_t Count)
+  int CopyDataToVector(uzLib::in_stream& InStream, vector<unsigned char>& Destination, const size_t Count)
   {
     // Faster version (at least in aggressive-optimization mode, the other one I did not test).
     size_t NumExtractedBytes = 0;
     BYTE CurByte;
     while (NumExtractedBytes < Count && TryReadNextByte(InStream, CurByte))
     {
-      Destination.push_back(CurByte);
+      Destination.push_back((unsigned char)CurByte);
       ++NumExtractedBytes;
     }
     return NumExtractedBytes;
@@ -753,7 +751,7 @@ namespace
 // Static data definition.
 //-----------------------------------------------------------------------------------------
 #if (BWT_SORT_TYPE == BWT_STD_SORT)
-  std::vector<BYTE>* uzLib::uz1BurrowsWheelerAlgorithm::Temp_CompressBuffer = NULL;
+  std::vector<unsigned char>* uzLib::uz1BurrowsWheelerAlgorithm::Temp_CompressBuffer = NULL;
   int uzLib::uz1BurrowsWheelerAlgorithm::Temp_CompressLength = 0;
 #elif (BWT_SORT_TYPE == BWT_C_SORT)
   unsigned char* uzLib::uz1BurrowsWheelerAlgorithm::Temp_CStyle_CompressBuffer = NULL;
@@ -779,7 +777,7 @@ bool uzLib::uz1BurrowsWheelerAlgorithm::Compress(uzLib::in_stream& InStream, uzL
     return false;
 
   // CompressBuffer will hold the data-chunks from the file.
-  vector<uzLib::BYTE> CompressBuffer(MAX_BUFFER_SIZE);
+  vector<unsigned char> CompressBuffer(MAX_BUFFER_SIZE);
   
   // CompressPosition will point to or is the index-array which is used to rearange the data.
 #if (BWT_SORT_TYPE == BWT_EXT_SORT)
@@ -940,7 +938,7 @@ bool uzLib::uz1BurrowsWheelerAlgorithm::Decompress(uzLib::in_stream& InStream, u
   if (CallUpdateFunction(0, InStreamLength, UPDATE_MSG))
     return false;
 
-  vector<BYTE> DecompressBuffer(MAX_BUFFER_SIZE+1);
+  vector<unsigned char> DecompressBuffer(MAX_BUFFER_SIZE+1);
   vector<int> Temp(MAX_BUFFER_SIZE+1);
     
   int DecompressCount[256+1];
@@ -1139,7 +1137,7 @@ bool uzLib::uz1RLEAlgorithm::Decompress(uzLib::in_stream& InStream, uzLib::out_s
         return false;
 
       // Read the number of "missing" bytes.
-      BYTE RLE_Count = ReadByte(InStream);
+      unsigned char RLE_Count = (unsigned char)ReadByte(InStream);
       ++ProcessedBytes;
 
       if (InStream.eof())
@@ -1200,16 +1198,16 @@ class HuffmanNode
     // Destructor
     ~HuffmanNode();
     
-    void PrependBit(BYTE B);
+    void PrependBit(unsigned char B);
     
     // Writes the compressed data to the buffer.
-    void WriteTable(boost::dynamic_bitset<BYTE>& Buffer)const;
+    void WriteTable(boost::dynamic_bitset<unsigned char>& Buffer)const;
     
     // Writes the bits of this node (and only of this node) to the buffer.
-    void WriteBits(boost::dynamic_bitset<BYTE>& Buffer)const;
+    void WriteBits(boost::dynamic_bitset<unsigned char>& Buffer)const;
     
     // Reads the compressed data. NextBit must contain the index of the first bit, and is advanced as the data is read from the bitset.
-    void ReadTable(const boost::dynamic_bitset<BYTE>& Source, size_t& NextBit);
+    void ReadTable(const boost::dynamic_bitset<unsigned char>& Source, size_t& NextBit);
   
     // Returns the character of this node.
     int GetChar()const { return Char; }
@@ -1225,13 +1223,13 @@ class HuffmanNode
 
   private:
     // Reads a byte from the bitset (NextBit is thus advanced by 8).
-    BYTE ExtractByteFromBitset(const boost::dynamic_bitset<BYTE>& Source, size_t& NextBit);
+    unsigned char ExtractByteFromBitset(const boost::dynamic_bitset<unsigned char>& Source, size_t& NextBit);
   
   private:
     int Char; // The byte of that node. Only valid if Childs.size()==0.
     
     vector<HuffmanNode*> Childs; // The child-nodes.
-    vector<BYTE> Bits;
+    vector<unsigned char> Bits;
 };
 
 // Helper function:
@@ -1254,7 +1252,7 @@ HuffmanNode::~HuffmanNode()
   CleanupHuffmanVector(Childs);
 }
 
-void HuffmanNode::PrependBit(BYTE B)
+void HuffmanNode::PrependBit(unsigned char B)
 {
   Bits.insert(Bits.begin(), B);
   
@@ -1262,7 +1260,7 @@ void HuffmanNode::PrependBit(BYTE B)
     Childs[CurChildIndex]->PrependBit(B);
 }
 
-void HuffmanNode::WriteTable(boost::dynamic_bitset<BYTE>& Buffer)const
+void HuffmanNode::WriteTable(boost::dynamic_bitset<unsigned char>& Buffer)const
 {
   // Write a flag which indicates if childs are available.
   Buffer.push_back(Childs.size() != 0);
@@ -1274,17 +1272,17 @@ void HuffmanNode::WriteTable(boost::dynamic_bitset<BYTE>& Buffer)const
       Childs[CurChildIndex]->WriteTable(Buffer);
   }
   else
-    Buffer.append(static_cast<BYTE>(Char));
+    Buffer.append(static_cast<unsigned char>(Char));
 }
 
-void HuffmanNode::WriteBits(boost::dynamic_bitset<BYTE>& Buffer)const
+void HuffmanNode::WriteBits(boost::dynamic_bitset<unsigned char>& Buffer)const
 {
   // Iterate through all bits and write each one to the buffer.
   for (size_t CurBitIndex = 0; CurBitIndex < Bits.size(); ++CurBitIndex)
     Buffer.push_back((Bits[CurBitIndex] == 0) ? false : true);
 }
 
-void HuffmanNode::ReadTable(const boost::dynamic_bitset<BYTE>& Source, size_t& NextBit)
+void HuffmanNode::ReadTable(const boost::dynamic_bitset<unsigned char>& Source, size_t& NextBit)
 {
   // Check if this node should have childs.
   if (Source[NextBit++])
@@ -1302,13 +1300,13 @@ void HuffmanNode::ReadTable(const boost::dynamic_bitset<BYTE>& Source, size_t& N
     Char = ExtractByteFromBitset(Source, NextBit);
 }
 
-BYTE HuffmanNode::ExtractByteFromBitset(const boost::dynamic_bitset<BYTE>& Source, size_t& NextBit)
+unsigned char HuffmanNode::ExtractByteFromBitset(const boost::dynamic_bitset<unsigned char>& Source, size_t& NextBit)
 {
-  BYTE Mask = 0x01; // Defines which bit is extracted next from the bitset.
-  BYTE ToReturn = 0; // Used to build the byte.
+  unsigned char Mask = 0x01; // Defines which bit is extracted next from the bitset.
+  unsigned char ToReturn = 0; // Used to build the byte.
   
   // Loop through the next 8 bits in the bitset.
-  for (size_t NumExtractedBits = 0; NumExtractedBits < sizeof(BYTE)*8; ++NumExtractedBits)
+  for (size_t NumExtractedBits = 0; NumExtractedBits < sizeof(unsigned char)*8; ++NumExtractedBits)
   {
     // In case the bit is set, set the corresponding bit in 'ToReturn'.
     if (Source.test(NextBit++))
@@ -1457,12 +1455,12 @@ bool uzLib::uz1HuffmanAlgorithm::Compress(uzLib::in_stream& InStream, uzLib::out
   HuffmanNodes.pop_back();    
   
   // Write the whole huffman tree.
-  boost::dynamic_bitset<BYTE> OutBits;
+  boost::dynamic_bitset<unsigned char> OutBits;
   RootNode->WriteTable(OutBits);
   
   // Encode each byte in the input stream, i.e. write each byte in the compressed format.
   int ProcessedBytes = InStreamLength;
-  BYTE CurByte;
+  char CurByte;
   while (TryReadNextByte(InStream, CurByte))
   {
     if ((ProcessedBytes % BYTE_UPDATE_INTERVALL == 0) && CallUpdateFunction(ProcessedBytes, NumSteps, UPDATE_MSG2))
@@ -1517,7 +1515,7 @@ bool uzLib::uz1HuffmanAlgorithm::Decompress(uzLib::in_stream& InStream, uzLib::o
   // Read all bits into memory. Don't use istream_iterator, because it will read formatted data.
   std::istreambuf_iterator<BYTE> InStreamIter(InStream);
   std::istreambuf_iterator<BYTE> EndOfInStreamIter;
-  boost::dynamic_bitset<BYTE> InBits(InStreamIter, EndOfInStreamIter);
+  boost::dynamic_bitset<unsigned char> InBits(InStreamIter, EndOfInStreamIter);
   
   // Build the huffman tree.
   HuffmanNode RootNode(-1);
@@ -1624,23 +1622,26 @@ bool uzLib::uz1MoveToFrontAlgorithm::Decompress(uzLib::in_stream& InStream, uzLi
     return false;
   
   // Create the byte list.
-  BYTE List[256];
+  unsigned char List[256];
   for (int CurByte = 0; CurByte < 256; ++CurByte)
-    List[CurByte] = static_cast<BYTE>(CurByte);
-  
+    List[CurByte] = static_cast<unsigned char>(CurByte);
+
   int ProcessedBytes = 0;
   
   // Iterate through all bytes in the input stream.
-  BYTE CurByte;
-  while (TryReadNextByte(InStream, CurByte))
+  BYTE CurByteTMP;
+  while (TryReadNextByte(InStream, CurByteTMP))
   {
+    unsigned char CurByte = (unsigned char)CurByteTMP;
+
     if ((ProcessedBytes % BYTE_UPDATE_INTERVALL == 0) && CallUpdateFunction(ProcessedBytes, InStreamLength, UPDATE_MSG))
       return false;
 
     ++ProcessedBytes;
 
     // Get the original byte and write it to the stream.
-    const BYTE DecompressedByte = List[CurByte];
+    const unsigned char DecompressedByte = List[CurByte];
+
     WriteByte(OutStream, DecompressedByte);
     
     const int NewPos = 0;

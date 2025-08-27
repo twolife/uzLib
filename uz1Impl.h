@@ -12,6 +12,7 @@ Created by Gugi, 2010-2011
 #include <vector>
 #include <exception>
 #include <string>
+#include <iostream>
 #include <zlib.h>
 
 
@@ -29,9 +30,9 @@ Created by Gugi, 2010-2011
 //===========================================================================
 namespace uzLib 
 {
-  typedef unsigned char BYTE;
-  typedef std::basic_istream<BYTE> in_stream;
-  typedef std::basic_ostream<BYTE> out_stream;
+  typedef char BYTE;
+  using in_stream = std::istream;
+  using out_stream = std::ostream;
   
   typedef void (*pUz1UpdateFunc)(unsigned int CurStatus, unsigned int CompletedStatus, const std::wstring& Msg, bool& bCancel, void* UserObj);
 
@@ -197,7 +198,7 @@ namespace uzLib
     
       // These are only valid during the ClampedBufferCompare-call.
 #if (BWT_SORT_TYPE == BWT_STD_SORT)
-      static std::vector<BYTE>* Temp_CompressBuffer;
+      static std::vector<unsigned char>* Temp_CompressBuffer;
       static int Temp_CompressLength;
 #elif (BWT_SORT_TYPE == BWT_C_SORT)
 	    static unsigned char* Temp_CStyle_CompressBuffer;

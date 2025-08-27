@@ -1,11 +1,12 @@
 #include "uz1Impl.h"
 
+#include <fstream>
 #include <iostream>
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    basic_ifstream<Bytef> InputStream;
-    basic_ofstream<Bytef> OutputStream;
+    std::ifstream InputStream;
+    std::ofstream OutputStream;
 
     if(argc != 3) {
         cout << "Usage: " << argv[0] << " <input> <output>" << endl;
@@ -31,6 +32,8 @@ int main(int argc, char* argv[]) {
     uzLib::DecompressFromUz1(InputStream, OutputStream, NULL, NULL);
     InputStream.close();
     OutputStream.close();
+
+    cout << argv[1] << " [Decompress] -> " << argv[2] << endl;
 
     return 0;
 }
